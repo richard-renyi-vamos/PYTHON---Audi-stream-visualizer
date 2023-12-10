@@ -1,0 +1,43 @@
+import pyaudio
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Parameters
+CHUNK = 1024  # Number of frames per buffer
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100  # Sample rate in Hz
+
+# Initialize PyAudio
+p = pyaudio.PyAudio()
+
+# Open stream
+stream = p.open(format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK)
+
+# Create a figure and axis to plot the data
+plt.ion()  # Turn on interactive mode for real-time plotting
+fig, ax = plt.subplots()
+x = np.arange(0, 2 * CHUNK, 2)
+line, = ax.plot(x, np.random.rand(CHUNK))
+
+# Format plot
+ax.set_ylim(0, 255)  # Adjust the y-axis limits according to the audio data
+ax.set_title('Real-Time Audio Stream Visualization')
+ax.set_xlabel('Frequency')
+ax.set_ylabel('Amplitude')
+
+while True:
+    data = stream.read(CHUNK, exception_on_overflow=False)
+    data_np = np.frombuffer(data, dtype=np.int16)
+    line.set_ydata(data_np)
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+# Close the stream and terminate PyAudio
+stream.stop_stream()
+stream.close()
+p.terminate()
